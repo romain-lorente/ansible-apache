@@ -47,11 +47,6 @@
 - name: Installation de MySQL
   hosts: all
   tasks:
-    - name: Inscrire le nouveau dépôt
-      apt_repository:
-        repo: deb http://ftp.fr.debian.org/debian/ stretch main
-        state: present
-        update_cache: yes
     - name: Installation de python-pip
       apt:
         name: python-pip
@@ -96,3 +91,67 @@
           host: localhost
           priv: "{{mysql_db}}.*:ALL,GRANT"
           login_unix_socket: /var/run/mysqld/mysqld.sock
+
+# CONFIG PHPMYADMIN
+
+- name: Installation de PHPMyAdmin
+  hosts: all
+  tasks:
+    - name: Installation de debconf
+      apt:
+          name: debconf-utils
+          state: present
+    - name: Installation de dbconfig
+      debconf:
+          name: phpmyadmin
+          question: phpmyadmin/dbconfig-install
+          value: true
+          vtype: boolean
+    - name: Installation de dbconfig - Partie 2
+      debconf:
+          name: phpmyadmin
+          question: phpmyadmin/app-password-confirm
+          value: "{{mysql_password}}"
+          vtype: password
+    - name: Installation de dbconfig - Partie 3
+      debconf:
+          name: phpmyadmin
+          question: phpmyadmin/mysql/admin-pass
+          value: "{{mysql_password}}"
+          vtype: password
+    - name: Installation de dbconfig - Partie 4
+      debconf:
+          name: phpmyadmin
+          question: phpmyadmin/mysql/app-pass
+          value: "{{mysql_password}}"
+          vtype: password
+    - name: Installation de dbconfig - Partie 5
+      debconf:
+          name: phpmyadmin
+          question: phpmyadmin/reconfigure-webserver
+          value: apache2
+          vtype: multiselect
+    - name: Installation de phpmyadmin
+      apt:
+          name: phpmyadmin
+          state: present
+    - name: Redémarrer Apache
+      service:
+          name: apache2
+          state: started
+          enabled: yes
+          
+- name: Gestion des erreurs
+  hosts: all
+  tasks:
+    - name: Suppression de index.html
+      file:
+          path: /var/www/html/index.html
+          state: absent
+    - name: Copie d'index.php
+      copy:
+          src: /root/index.php
+          dest: /var/www/html/index.php
+          owner: www-data
+          group: www-data
+          mode: 0755
