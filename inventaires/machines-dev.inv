@@ -1,2 +1,7 @@
 [Debian9Dev]
 192.168.4.82 ansible_user=root
+
+[Debian9Dev:vars]
+mysql_user=eleve
+mysql_password=epsi
+mysql_db=bdeleve
