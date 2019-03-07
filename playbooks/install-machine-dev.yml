@@ -41,3 +41,41 @@
       apt :
         name: php7.2
         state: present
+        
+# INSTALLATION MYSQL
+    
+- name: Installation de MySQL
+  hosts: all
+  tasks:
+    - name: Inscrire le nouveau dépôt
+      apt_repository:
+        repo: deb http://ftp.fr.debian.org/debian/ stretch main
+        state: present
+        update_cache: yes
+    - name: Installation de python-pip
+      apt:
+        name: python-pip
+        state: present
+    - name: Installer le module Python pour MySQL
+      pip:
+        name: PyMySQL
+    - name: Installation de python-mysqldb
+      apt:
+        name: python-mysqldb
+        state: present
+    - name: Installation de mysql-server
+      apt:
+        name: mysql-server
+        state: present
+    - name: Gestion du my.cnf
+      copy:
+          src: /root/autres/my.cnf.j2
+          dest: /root/.my.cnf
+          owner: root
+          group: root
+          mode: 0600
+    - name: Redémarrer le service MySQL
+      service:
+        name: mysql
+        state: restarted
+        enabled: yes
